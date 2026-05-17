@@ -1,0 +1,135 @@
+body {
+  background: #f5f7fb;
+  color: #172033;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.navbar {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.navbar-brand {
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.page-section {
+  padding-bottom: 48px;
+}
+
+.hero-section {
+  background:
+    linear-gradient(90deg, rgba(12, 83, 58, 0.94), rgba(10, 88, 202, 0.78)),
+    url("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1600&q=80");
+  background-position: center;
+  background-size: cover;
+  border-radius: 0 0 24px 24px;
+  color: white;
+  margin: -24px -12px 32px;
+  padding: 64px 24px;
+}
+
+.hero-content {
+  max-width: 720px;
+}
+
+.hero-content h1 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 800;
+}
+
+.hero-content p {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 1.1rem;
+}
+
+.soft-card {
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.stadium-card {
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stadium-card:hover {
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.12);
+  transform: translateY(-2px);
+}
+
+.stadium-image {
+  aspect-ratio: 16 / 10;
+  height: 220px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.detail-image {
+  aspect-ratio: 16 / 10;
+  max-height: 430px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.slot-available {
+  background: #eefbf3;
+  border-color: #198754 !important;
+}
+
+.slot-reserved {
+  background: #fff1f2;
+  border-color: #dc3545 !important;
+}
+
+.empty-state {
+  background: white;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  color: #64748b;
+  padding: 32px;
+  text-align: center;
+}
+
+.form-control,
+.form-select,
+.btn {
+  border-radius: 10px;
+}
+
+.btn-success {
+  background: #16834f;
+  border-color: #16834f;
+}
+
+.btn-success:hover {
+  background: #116b40;
+  border-color: #116b40;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+@media (max-width: 767px) {
+  .hero-section {
+    border-radius: 0 0 18px 18px;
+    margin-left: -12px;
+    margin-right: -12px;
+    padding: 48px 20px;
+  }
+
+  .navbar-nav {
+    gap: 4px;
+  }
+
+  .navbar .btn,
+  .navbar .nav-link {
+    text-align: left;
+  }
+}

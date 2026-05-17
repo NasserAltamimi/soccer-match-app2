@@ -8,6 +8,7 @@ Use ONLY:
 - Express.js
 - MongoDB + Mongoose
 - JWT Authentication
+- Bootstrap for styling
 
 Do NOT use:
 - Next.js
