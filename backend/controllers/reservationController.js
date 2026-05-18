@@ -169,6 +169,10 @@ const createReservation = async (req, res) => {
 
 const getReservations = async (req, res) => {
   try {
+    if (req.user.role === "owner") {
+      return res.status(403).json({ message: "Owners do not have user reservations" });
+    }
+
     const reservations = await Reservation.find({ user: req.user.id }).populate(
       "stadium",
       "name location reservationSlots"
@@ -182,6 +186,10 @@ const getReservations = async (req, res) => {
 
 const cancelReservation = async (req, res) => {
   try {
+    if (req.user.role === "owner") {
+      return res.status(403).json({ message: "Owners cannot cancel user reservations" });
+    }
+
     const reservation = await Reservation.findById(req.params.id);
 
     if (!reservation) {

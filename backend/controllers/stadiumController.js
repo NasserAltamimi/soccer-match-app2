@@ -129,7 +129,7 @@ const createStadium = async (req, res) => {
     const loggedInUser = await User.findById(req.user.id);
 
     if (!loggedInUser || loggedInUser.role !== "owner") {
-      return res.status(401).json({ message: "Only owners can create stadiums" });
+      return res.status(403).json({ message: "Only owners can create stadiums" });
     }
 
     const name = trimText(req.body.name);

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import useAuth from "../hooks/useAuth";
 
 function MyReservations() {
+  const { user } = useAuth();
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancelingId, setCancelingId] = useState("");
@@ -90,6 +92,11 @@ function MyReservations() {
         <div>
           <h1>My Reservations</h1>
           <p className="text-muted mb-0">Manage your upcoming soccer bookings.</p>
+          {user && (
+            <span className="badge bg-success mt-2">
+              {user.name} (User)
+            </span>
+          )}
         </div>
       </div>
 

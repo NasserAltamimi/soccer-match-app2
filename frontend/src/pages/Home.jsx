@@ -34,6 +34,24 @@ function getMaxSlotDateString() {
   return getDateString(maxDate);
 }
 
+function convertTo24HourTime(hour, minute, period) {
+  if (!hour || !minute || !period) {
+    return "";
+  }
+
+  let hourNumber = Number(hour);
+
+  if (period === "AM" && hourNumber === 12) {
+    hourNumber = 0;
+  }
+
+  if (period === "PM" && hourNumber !== 12) {
+    hourNumber = hourNumber + 12;
+  }
+
+  return `${String(hourNumber).padStart(2, "0")}:${minute}`;
+}
+
 function isSlotAvailable(slot) {
   const slotDate = getSlotDateString(slot.date);
 
@@ -45,14 +63,15 @@ function isSlotAvailable(slot) {
   );
 }
 
-function slotMatchesAvailabilitySearch(slot, availabilityDate, availabilityStart, availabilityEnd) {
-  if (!isSlotAvailable(slot)) {
+function slotMatchesFilters(slot, availabilityDate, availabilityStart, availabilityEnd, showAvailableOnly) {
+  const slotDate = getSlotDateString(slot.date);
+  const hasTimeFilter = availabilityStart || availabilityEnd;
+
+  if (availabilityDate && slotDate !== availabilityDate) {
     return false;
   }
 
-  const slotDate = getSlotDateString(slot.date);
-
-  if (availabilityDate && slotDate !== availabilityDate) {
+  if ((showAvailableOnly || hasTimeFilter) && !isSlotAvailable(slot)) {
     return false;
   }
 
@@ -61,6 +80,10 @@ function slotMatchesAvailabilitySearch(slot, availabilityDate, availabilityStart
   }
 
   if (availabilityEnd && slot.endTime > availabilityEnd) {
+    return false;
+  }
+
+  if (!availabilityDate && !showAvailableOnly && !hasTimeFilter) {
     return false;
   }
 
@@ -74,8 +97,18 @@ function Home() {
   const [locationSearch, setLocationSearch] = useState("");
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [availabilityDate, setAvailabilityDate] = useState("");
-  const [availabilityStart, setAvailabilityStart] = useState("");
-  const [availabilityEnd, setAvailabilityEnd] = useState("");
+  const [startHour, setStartHour] = useState("");
+  const [startMinute, setStartMinute] = useState("");
+  const [startPeriod, setStartPeriod] = useState("");
+  const [endHour, setEndHour] = useState("");
+  const [endMinute, setEndMinute] = useState("");
+  const [endPeriod, setEndPeriod] = useState("");
+  const hours = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+  const minutes = Array.from({ length: 60 }, (item, index) => {
+    return String(index).padStart(2, "0");
+  });
+  const availabilityStart = convertTo24HourTime(startHour, startMinute, startPeriod);
+  const availabilityEnd = convertTo24HourTime(endHour, endMinute, endPeriod);
 
   const fallbackImages = {
     KingdomArena:
@@ -137,26 +170,31 @@ function Home() {
   }, []);
 
   const filteredStadiums = stadiums.filter((stadium) => {
-    const matchesLocation = stadium.location
-      .toLowerCase()
-      .includes(locationSearch.toLowerCase());
-    const isSearchingAvailability =
+    const searchText = locationSearch.trim().toLowerCase();
+    const stadiumName = stadium.name.toLowerCase();
+    const stadiumLocation = stadium.location.toLowerCase();
+    const matchesSearch =
+      searchText === "" ||
+      stadiumName.includes(searchText) ||
+      stadiumLocation.includes(searchText);
+    const hasSlotFilter =
       showAvailableOnly || availabilityDate || availabilityStart || availabilityEnd;
 
-    const hasAvailableSlot = stadium.reservationSlots?.some((slot) => {
-      return slotMatchesAvailabilitySearch(
+    const hasMatchingSlot = stadium.reservationSlots?.some((slot) => {
+      return slotMatchesFilters(
         slot,
         availabilityDate,
         availabilityStart,
-        availabilityEnd
+        availabilityEnd,
+        showAvailableOnly
       );
     });
 
-    if (isSearchingAvailability) {
-      return matchesLocation && hasAvailableSlot;
+    if (hasSlotFilter) {
+      return matchesSearch && hasMatchingSlot;
     }
 
-    return matchesLocation;
+    return matchesSearch;
   });
 
   return (
@@ -187,12 +225,12 @@ function Home() {
       <div className="card soft-card p-3 p-md-4 mb-4">
         <div className="row g-3 align-items-end">
           <div className="col-md-6">
-            <label className="form-label">Search by location</label>
+            <label className="form-label">Search by name or location</label>
             <input
               className="form-control"
               value={locationSearch}
               onChange={(event) => setLocationSearch(event.target.value)}
-              placeholder="Example: Riyadh, Olaya, Al Malqa"
+              placeholder="Example: Riyadh, Al Malqa, Kingdom"
             />
           </div>
 
@@ -225,24 +263,104 @@ function Home() {
             </div>
           </div>
 
-          <div className="col-md-3">
-            <label className="form-label">Starts after</label>
-            <input
-              type="time"
-              className="form-control"
-              value={availabilityStart}
-              onChange={(event) => setAvailabilityStart(event.target.value)}
-            />
+          <div className="col-12">
+            <p className="fw-semibold mb-2">Starts after</p>
+            <div className="row g-2">
+              <div className="col-md-4">
+                <label className="form-label">Start Hour</label>
+                <select
+                  className="form-select"
+                  value={startHour}
+                  onChange={(event) => setStartHour(event.target.value)}
+                >
+                  <option value="">Hour</option>
+                  {hours.map((hour) => (
+                    <option value={hour} key={hour}>
+                      {hour}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">Start Minute</label>
+                <select
+                  className="form-select"
+                  value={startMinute}
+                  onChange={(event) => setStartMinute(event.target.value)}
+                >
+                  <option value="">Min</option>
+                  {minutes.map((minute) => (
+                    <option value={minute} key={minute}>
+                      {minute}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">Start AM/PM</label>
+                <select
+                  className="form-select"
+                  value={startPeriod}
+                  onChange={(event) => setStartPeriod(event.target.value)}
+                >
+                  <option value="">AM/PM</option>
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div className="col-md-3">
-            <label className="form-label">Ends before</label>
-            <input
-              type="time"
-              className="form-control"
-              value={availabilityEnd}
-              onChange={(event) => setAvailabilityEnd(event.target.value)}
-            />
+          <div className="col-12">
+            <p className="fw-semibold mb-2">Ends before</p>
+            <div className="row g-2">
+              <div className="col-md-4">
+                <label className="form-label">End Hour</label>
+                <select
+                  className="form-select"
+                  value={endHour}
+                  onChange={(event) => setEndHour(event.target.value)}
+                >
+                  <option value="">Hour</option>
+                  {hours.map((hour) => (
+                    <option value={hour} key={hour}>
+                      {hour}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">End Minute</label>
+                <select
+                  className="form-select"
+                  value={endMinute}
+                  onChange={(event) => setEndMinute(event.target.value)}
+                >
+                  <option value="">Min</option>
+                  {minutes.map((minute) => (
+                    <option value={minute} key={minute}>
+                      {minute}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">End AM/PM</label>
+                <select
+                  className="form-select"
+                  value={endPeriod}
+                  onChange={(event) => setEndPeriod(event.target.value)}
+                >
+                  <option value="">AM/PM</option>
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className="col-md-6">
@@ -253,8 +371,12 @@ function Home() {
                 setLocationSearch("");
                 setShowAvailableOnly(false);
                 setAvailabilityDate("");
-                setAvailabilityStart("");
-                setAvailabilityEnd("");
+                setStartHour("");
+                setStartMinute("");
+                setStartPeriod("");
+                setEndHour("");
+                setEndMinute("");
+                setEndPeriod("");
               }}
             >
               Clear Filters

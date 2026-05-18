@@ -124,6 +124,11 @@ function OwnerDashboard() {
       <div className="mb-4">
         <h1>Owner Dashboard</h1>
         <p className="text-muted mb-0">Track your stadium slots and reservations.</p>
+        {user && (
+          <span className="badge bg-success mt-2">
+            {user.name} (Owner)
+          </span>
+        )}
       </div>
 
       {message && <div className={`alert alert-${messageType}`}>{message}</div>}

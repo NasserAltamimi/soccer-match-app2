@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
-function ProtectedRoute({ children, ownerOnly }) {
+function ProtectedRoute({ children, ownerOnly, userOnly }) {
   const { token, user, authLoading } = useAuth();
 
   if (authLoading) {
@@ -19,6 +19,10 @@ function ProtectedRoute({ children, ownerOnly }) {
   }
 
   if (ownerOnly && user?.role !== "owner") {
+    return <Navigate to="/" />;
+  }
+
+  if (userOnly && user?.role !== "user") {
     return <Navigate to="/" />;
   }
 

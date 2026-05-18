@@ -25,7 +25,7 @@ function App() {
           <Route
             path="/my-reservations"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute userOnly={true}>
                 <MyReservations />
               </ProtectedRoute>
             }
