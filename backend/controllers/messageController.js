@@ -80,7 +80,7 @@ const replyToMessage = async (req, res) => {
     }
 
     if (message.owner.toString() !== req.user.id) {
-      return res.status(401).json({ message: "Only the stadium owner can reply" });
+      return res.status(403).json({ message: "Only the stadium owner can reply" });
     }
 
     message.reply = cleanReply;
