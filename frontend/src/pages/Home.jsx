@@ -1,12 +1,81 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+function getDateString(dateValue) {
+  const year = dateValue.getFullYear();
+  const month = String(dateValue.getMonth() + 1).padStart(2, "0");
+  const day = String(dateValue.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getSlotDateString(dateValue) {
+  if (typeof dateValue === "string") {
+    return dateValue.slice(0, 10);
+  }
+
+  const parsedDate = new Date(dateValue);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "";
+  }
+
+  return getDateString(parsedDate);
+}
+
+function getTodayDateString() {
+  return getDateString(new Date());
+}
+
+function getMaxSlotDateString() {
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + 7);
+
+  return getDateString(maxDate);
+}
+
+function isSlotAvailable(slot) {
+  const slotDate = getSlotDateString(slot.date);
+
+  return (
+    !slot.isReserved &&
+    slotDate >= getTodayDateString() &&
+    slotDate <= getMaxSlotDateString() &&
+    slot.endTime > slot.startTime
+  );
+}
+
+function slotMatchesAvailabilitySearch(slot, availabilityDate, availabilityStart, availabilityEnd) {
+  if (!isSlotAvailable(slot)) {
+    return false;
+  }
+
+  const slotDate = getSlotDateString(slot.date);
+
+  if (availabilityDate && slotDate !== availabilityDate) {
+    return false;
+  }
+
+  if (availabilityStart && slot.startTime < availabilityStart) {
+    return false;
+  }
+
+  if (availabilityEnd && slot.endTime > availabilityEnd) {
+    return false;
+  }
+
+  return true;
+}
+
 function Home() {
   const [stadiums, setStadiums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [locationSearch, setLocationSearch] = useState("");
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
+  const [availabilityDate, setAvailabilityDate] = useState("");
+  const [availabilityStart, setAvailabilityStart] = useState("");
+  const [availabilityEnd, setAvailabilityEnd] = useState("");
 
   const fallbackImages = {
     KingdomArena:
@@ -23,6 +92,8 @@ function Home() {
 
   const defaultImage =
     "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80";
+  const placeholderImage =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='750' viewBox='0 0 1200 750'%3E%3Crect width='1200' height='750' fill='%23e2e8f0'/%3E%3Ctext x='600' y='375' text-anchor='middle' dominant-baseline='middle' fill='%23475569' font-family='Arial' font-size='42'%3ESoccer Stadium%3C/text%3E%3C/svg%3E";
 
   function getStadiumImage(stadium) {
     return stadium.images?.[0] || fallbackImages[stadium.name] || defaultImage;
@@ -30,6 +101,7 @@ function Home() {
 
   function handleImageError(event, stadiumName) {
     if (event.currentTarget.dataset.fallbackUsed === "true") {
+      event.currentTarget.src = placeholderImage;
       return;
     }
 
@@ -68,12 +140,19 @@ function Home() {
     const matchesLocation = stadium.location
       .toLowerCase()
       .includes(locationSearch.toLowerCase());
+    const isSearchingAvailability =
+      showAvailableOnly || availabilityDate || availabilityStart || availabilityEnd;
 
     const hasAvailableSlot = stadium.reservationSlots?.some((slot) => {
-      return !slot.isReserved;
+      return slotMatchesAvailabilitySearch(
+        slot,
+        availabilityDate,
+        availabilityStart,
+        availabilityEnd
+      );
     });
 
-    if (showAvailableOnly) {
+    if (isSearchingAvailability) {
       return matchesLocation && hasAvailableSlot;
     }
 
@@ -107,7 +186,7 @@ function Home() {
 
       <div className="card soft-card p-3 p-md-4 mb-4">
         <div className="row g-3 align-items-end">
-          <div className="col-md-8">
+          <div className="col-md-6">
             <label className="form-label">Search by location</label>
             <input
               className="form-control"
@@ -117,7 +196,21 @@ function Home() {
             />
           </div>
 
-          <div className="col-md-4">
+          <div className="col-md-3">
+            <label className="form-label">Available date</label>
+            <input
+              type="date"
+              className="form-control"
+              value={availabilityDate}
+              min={getTodayDateString()}
+              max={getMaxSlotDateString()}
+              lang="en"
+              dir="ltr"
+              onChange={(event) => setAvailabilityDate(event.target.value)}
+            />
+          </div>
+
+          <div className="col-md-3">
             <div className="form-check mb-md-2">
               <input
                 className="form-check-input"
@@ -130,6 +223,42 @@ function Home() {
                 Show available only
               </label>
             </div>
+          </div>
+
+          <div className="col-md-3">
+            <label className="form-label">Starts after</label>
+            <input
+              type="time"
+              className="form-control"
+              value={availabilityStart}
+              onChange={(event) => setAvailabilityStart(event.target.value)}
+            />
+          </div>
+
+          <div className="col-md-3">
+            <label className="form-label">Ends before</label>
+            <input
+              type="time"
+              className="form-control"
+              value={availabilityEnd}
+              onChange={(event) => setAvailabilityEnd(event.target.value)}
+            />
+          </div>
+
+          <div className="col-md-6">
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={() => {
+                setLocationSearch("");
+                setShowAvailableOnly(false);
+                setAvailabilityDate("");
+                setAvailabilityStart("");
+                setAvailabilityEnd("");
+              }}
+            >
+              Clear Filters
+            </button>
           </div>
         </div>
       </div>
@@ -162,7 +291,7 @@ function Home() {
                 <p className="text-muted flex-grow-1">{stadium.description}</p>
                 <p className="fw-semibold mb-2">Location: {stadium.location}</p>
                 <span className="badge bg-success-subtle text-success align-self-start mb-3">
-                  {stadium.reservationSlots?.filter((slot) => !slot.isReserved).length || 0} available slots
+                  {stadium.reservationSlots?.filter((slot) => isSlotAvailable(slot)).length || 0} available slots
                 </span>
                 <Link to={`/stadiums/${stadium._id}`} className="btn btn-success">
                   View Details

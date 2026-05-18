@@ -2,6 +2,71 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
+function getDateString(dateValue) {
+  const year = dateValue.getFullYear();
+  const month = String(dateValue.getMonth() + 1).padStart(2, "0");
+  const day = String(dateValue.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getSlotDateString(dateValue) {
+  if (typeof dateValue === "string") {
+    return dateValue.slice(0, 10);
+  }
+
+  const parsedDate = new Date(dateValue);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "";
+  }
+
+  return getDateString(parsedDate);
+}
+
+function getTodayDateString() {
+  return getDateString(new Date());
+}
+
+function getMaxSlotDateString() {
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + 7);
+
+  return getDateString(maxDate);
+}
+
+function isValidTime(timeValue) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(timeValue);
+}
+
+function validateSlotForReservation(slot) {
+  if (!slot) {
+    return "Slot not found";
+  }
+
+  const slotDate = getSlotDateString(slot.date);
+  const today = getTodayDateString();
+  const maxDate = getMaxSlotDateString();
+
+  if (!slotDate || !isValidTime(slot.startTime) || !isValidTime(slot.endTime)) {
+    return "This slot is missing date or time details";
+  }
+
+  if (slotDate < today) {
+    return "This slot is in the past";
+  }
+
+  if (slotDate > maxDate) {
+    return "This slot is more than 7 days ahead";
+  }
+
+  if (slot.endTime <= slot.startTime) {
+    return "This slot has an invalid time range";
+  }
+
+  return "";
+}
+
 function StadiumDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -26,6 +91,8 @@ function StadiumDetails() {
 
   const defaultImage =
     "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80";
+  const placeholderImage =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='750' viewBox='0 0 1200 750'%3E%3Crect width='1200' height='750' fill='%23e2e8f0'/%3E%3Ctext x='600' y='375' text-anchor='middle' dominant-baseline='middle' fill='%23475569' font-family='Arial' font-size='42'%3ESoccer Stadium%3C/text%3E%3C/svg%3E";
 
   function getStadiumImage() {
     return stadium?.images?.[0] || fallbackImages[stadium?.name] || defaultImage;
@@ -33,6 +100,7 @@ function StadiumDetails() {
 
   function handleImageError(event) {
     if (event.currentTarget.dataset.fallbackUsed === "true") {
+      event.currentTarget.src = placeholderImage;
       return;
     }
 
@@ -71,6 +139,10 @@ function StadiumDetails() {
 
   async function handleReserve(slotId) {
     const token = localStorage.getItem("token");
+    const slot = stadium.reservationSlots.find((currentSlot) => {
+      return currentSlot._id === slotId;
+    });
+    const validationMessage = validateSlotForReservation(slot);
 
     if (user?.role === "owner") {
       setMessage("Owners cannot reserve stadium slots");
@@ -80,6 +152,12 @@ function StadiumDetails() {
 
     if (!token) {
       setMessage("Please login before reserving a slot");
+      setMessageType("danger");
+      return;
+    }
+
+    if (validationMessage) {
+      setMessage(validationMessage);
       setMessageType("danger");
       return;
     }
@@ -183,40 +261,45 @@ function StadiumDetails() {
       <h2>Reservation Slots</h2>
       <div className="row g-3">
         {stadium.reservationSlots && stadium.reservationSlots.length > 0 ? (
-          stadium.reservationSlots.map((slot) => (
-            <div className="col-md-4" key={slot._id}>
-              <div
-                className={
-                  slot.isReserved
-                    ? "card p-3 border slot-reserved"
-                    : "card p-3 border slot-available"
-                }
-              >
-                <p>Date: {new Date(slot.date).toLocaleDateString()}</p>
-                <p>
-                  Time: {slot.startTime} - {slot.endTime}
-                </p>
-                <p className={slot.isReserved ? "text-danger" : "text-success"}>
-                  {slot.isReserved ? "Reserved" : "Available"}
-                </p>
+          stadium.reservationSlots.map((slot) => {
+            const validationMessage = validateSlotForReservation(slot);
+            const isUnavailable = slot.isReserved || validationMessage !== "";
 
-                {user?.role !== "owner" && (
-                  <button
-                    type="button"
-                    className={slot.isReserved ? "btn btn-danger" : "btn btn-success"}
-                    disabled={slot.isReserved || reservingSlotId === slot._id}
-                    onClick={() => handleReserve(slot._id)}
-                  >
-                    {reservingSlotId === slot._id
-                      ? "Reserving..."
-                      : slot.isReserved
-                      ? "Reserved"
-                      : "Reserve"}
-                  </button>
-                )}
+            return (
+              <div className="col-md-4" key={slot._id}>
+                <div
+                  className={
+                    isUnavailable
+                      ? "card p-3 border slot-reserved"
+                      : "card p-3 border slot-available"
+                  }
+                >
+                  <p>Date: {new Date(slot.date).toLocaleDateString()}</p>
+                  <p>
+                    Time: {slot.startTime} - {slot.endTime}
+                  </p>
+                  <p className={isUnavailable ? "text-danger" : "text-success"}>
+                    {slot.isReserved ? "Reserved" : validationMessage || "Available"}
+                  </p>
+
+                  {user?.role !== "owner" && (
+                    <button
+                      type="button"
+                      className={isUnavailable ? "btn btn-danger" : "btn btn-success"}
+                      disabled={isUnavailable || reservingSlotId === slot._id}
+                      onClick={() => handleReserve(slot._id)}
+                    >
+                      {reservingSlotId === slot._id
+                        ? "Reserving..."
+                        : isUnavailable
+                        ? "Unavailable"
+                        : "Reserve"}
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="empty-state">No reservation slots available</div>
         )}

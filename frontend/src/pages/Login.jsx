@@ -14,7 +14,9 @@ function Login() {
   async function handleLogin(event) {
     event.preventDefault();
 
-    if (!email || !password) {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail || !password) {
       setMessage("Please enter your email and password");
       setMessageType("danger");
       return;
@@ -23,7 +25,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const data = await login(email, password);
+      const data = await login(trimmedEmail, password);
 
       if (data.token) {
         setMessage("Login successful");
@@ -56,6 +58,7 @@ function Login() {
             type="email"
             placeholder="Enter your email"
             value={email}
+            disabled={loading}
             onChange={(event) => setEmail(event.target.value)}
           />
 
@@ -65,6 +68,7 @@ function Login() {
             type="password"
             placeholder="Enter your password"
             value={password}
+            disabled={loading}
             onChange={(event) => setPassword(event.target.value)}
           />
 

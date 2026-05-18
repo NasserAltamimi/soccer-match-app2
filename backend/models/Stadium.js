@@ -8,10 +8,12 @@ const reservationSlotSchema = mongoose.Schema({
   startTime: {
     type: String,
     required: true,
+    trim: true,
   },
   endTime: {
     type: String,
     required: true,
+    trim: true,
   },
   isReserved: {
     type: Boolean,

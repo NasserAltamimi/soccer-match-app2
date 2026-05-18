@@ -10,12 +10,27 @@ const createToken = (id) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const name = req.body.name ? req.body.name.trim() : "";
+    const email = req.body.email ? req.body.email.trim().toLowerCase() : "";
+    const password = req.body.password || "";
+    const role = req.body.role === "owner" ? "owner" : "user";
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "Please fill in all required fields" });
+    }
+
+    if (!email.includes("@")) {
+      return res.status(400).json({ message: "Please enter a valid email address" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
 
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: "Email is already registered" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -36,13 +51,22 @@ const registerUser = async (req, res) => {
       token: createToken(user._id),
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Email is already registered" });
+    }
+
     res.status(500).json({ message: error.message });
   }
 };
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = req.body.email ? req.body.email.trim().toLowerCase() : "";
+    const password = req.body.password || "";
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please enter your email and password" });
+    }
 
     const user = await User.findOne({ email });
 

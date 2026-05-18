@@ -39,4 +39,12 @@ const reservationSchema = mongoose.Schema(
   }
 );
 
+reservationSchema.index(
+  { stadium: 1, slotId: 1, status: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: "reserved" },
+  }
+);
+
 module.exports = mongoose.model("Reservation", reservationSchema);

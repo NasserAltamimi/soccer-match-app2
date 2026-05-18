@@ -16,8 +16,17 @@ function Register() {
   async function handleRegister(event) {
     event.preventDefault();
 
-    if (!name || !email || !password) {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName || !trimmedEmail || !password) {
       setMessage("Please fill in all required fields");
+      setMessageType("danger");
+      return;
+    }
+
+    if (!trimmedEmail.includes("@")) {
+      setMessage("Please enter a valid email address");
       setMessageType("danger");
       return;
     }
@@ -31,7 +40,7 @@ function Register() {
     setLoading(true);
 
     try {
-      const data = await register(name, email, password, role);
+      const data = await register(trimmedName, trimmedEmail, password, role);
 
       if (data.token) {
         setMessage("Register successful");
@@ -64,6 +73,7 @@ function Register() {
             type="text"
             placeholder="Enter your name"
             value={name}
+            disabled={loading}
             onChange={(event) => setName(event.target.value)}
           />
 
@@ -73,6 +83,7 @@ function Register() {
             type="email"
             placeholder="Enter your email"
             value={email}
+            disabled={loading}
             onChange={(event) => setEmail(event.target.value)}
           />
 
@@ -82,6 +93,7 @@ function Register() {
             type="password"
             placeholder="Enter your password"
             value={password}
+            disabled={loading}
             onChange={(event) => setPassword(event.target.value)}
           />
 
@@ -89,6 +101,7 @@ function Register() {
           <select
             className="form-select mb-3"
             value={role}
+            disabled={loading}
             onChange={(event) => setRole(event.target.value)}
           >
             <option value="user">User</option>
