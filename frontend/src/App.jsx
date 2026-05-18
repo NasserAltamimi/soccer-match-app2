@@ -15,8 +15,7 @@ function App() {
   return (
     <div className="app-shell">
       <Navbar />
-
-      <main className="container mt-4 page-section">
+      <main className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />

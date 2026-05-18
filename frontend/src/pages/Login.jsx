@@ -13,75 +13,77 @@ function Login() {
 
   async function handleLogin(event) {
     event.preventDefault();
-
     const trimmedEmail = email.trim();
-
     if (!trimmedEmail || !password) {
       setMessage("Please enter your email and password");
       setMessageType("danger");
       return;
     }
-
     setLoading(true);
-
     try {
       const data = await login(trimmedEmail, password);
-
       if (data.token) {
-        setMessage("Login successful");
-        setMessageType("success");
         navigate("/");
       } else {
         setMessage(data.message || "Login failed");
         setMessageType("danger");
       }
-    } catch (error) {
+    } catch {
       setMessage("Could not connect to the server");
       setMessageType("danger");
     }
-
     setLoading(false);
   }
 
   return (
-    <section className="row justify-content-center">
-      <div className="col-md-6">
-        <h1>Login</h1>
-        <p className="text-muted">Login to reserve stadium slots and manage bookings.</p>
+    <div className="auth-page">
+      <div className="auth-box">
+        <div className="auth-brand">
+          <span className="auth-icon">&#9917;</span>
+          <h1 className="auth-title">Welcome Back</h1>
+          <p className="auth-sub">Sign in to manage your reservations</p>
+        </div>
 
-        <form className="card soft-card p-4" onSubmit={handleLogin}>
-          {message && <div className={`alert alert-${messageType}`}>{message}</div>}
+        {message && (
+          <div className={`alert-bar ${messageType === "danger" ? "alert-bar--error" : "alert-bar--success"}`}>
+            {message}
+          </div>
+        )}
 
-          <label className="form-label">Email</label>
-          <input
-            className="form-control mb-3"
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            disabled={loading}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-
-          <label className="form-label">Password</label>
-          <input
-            className="form-control mb-3"
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            disabled={loading}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-
-          <button type="submit" className="btn btn-success" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+        <form onSubmit={handleLogin}>
+          <div className="auth-field">
+            <label className="field-label">Email</label>
+            <input
+              className="form-control"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              disabled={loading}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="auth-field" style={{ marginBottom: "28px" }}>
+            <label className="field-label">Password</label>
+            <input
+              className="form-control"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              disabled={loading}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <button type="submit" className="btn-green btn-green--full" disabled={loading}>
+            {loading ? "Signing In..." : "Sign In"}
           </button>
-
-          <p className="mt-3 mb-0 text-muted">
-            New here? <Link to="/register">Create an account</Link>
-          </p>
         </form>
+
+        <p className="auth-bottom-link">
+          New here?{" "}
+          <Link to="/register" className="auth-link">Create an account</Link>
+        </p>
       </div>
-    </section>
+    </div>
   );
 }
 

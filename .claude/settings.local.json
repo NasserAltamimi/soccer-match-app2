@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\nmmd2\\\\OneDrive\\\\Desktop\\\\381\\\\practice\\\\soccer-match-app\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "PowerShell(head *)",
+      "PowerShell(ls *)"
+    ]
+  }
+}

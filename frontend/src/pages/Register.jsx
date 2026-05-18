@@ -15,109 +15,124 @@ function Register() {
 
   async function handleRegister(event) {
     event.preventDefault();
-
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
-
     if (!trimmedName || !trimmedEmail || !password) {
       setMessage("Please fill in all required fields");
       setMessageType("danger");
       return;
     }
-
     if (!trimmedEmail.includes("@")) {
       setMessage("Please enter a valid email address");
       setMessageType("danger");
       return;
     }
-
     if (password.length < 6) {
       setMessage("Password must be at least 6 characters");
       setMessageType("danger");
       return;
     }
-
     setLoading(true);
-
     try {
       const data = await register(trimmedName, trimmedEmail, password, role);
-
       if (data.token) {
-        setMessage("Register successful");
-        setMessageType("success");
         navigate("/");
       } else {
         setMessage(data.message || "Register failed");
         setMessageType("danger");
       }
-    } catch (error) {
+    } catch {
       setMessage("Could not connect to the server");
       setMessageType("danger");
     }
-
     setLoading(false);
   }
 
   return (
-    <section className="row justify-content-center">
-      <div className="col-md-6">
-        <h1>Register</h1>
-        <p className="text-muted">Create an account as a player or stadium owner.</p>
+    <div className="auth-page">
+      <div className="auth-box">
+        <div className="auth-brand">
+          <span className="auth-icon">&#9917;</span>
+          <h1 className="auth-title">Create Account</h1>
+          <p className="auth-sub">Join as a player or stadium owner</p>
+        </div>
 
-        <form className="card soft-card p-4" onSubmit={handleRegister}>
-          {message && <div className={`alert alert-${messageType}`}>{message}</div>}
+        {message && (
+          <div className={`alert-bar ${messageType === "danger" ? "alert-bar--error" : "alert-bar--success"}`}>
+            {message}
+          </div>
+        )}
 
-          <label className="form-label">Name</label>
-          <input
-            className="form-control mb-3"
-            type="text"
-            placeholder="Enter your name"
-            value={name}
-            disabled={loading}
-            onChange={(event) => setName(event.target.value)}
-          />
+        <form onSubmit={handleRegister}>
+          <div className="auth-field">
+            <label className="field-label">Full Name</label>
+            <input
+              className="form-control"
+              type="text"
+              placeholder="Your full name"
+              value={name}
+              disabled={loading}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div className="auth-field">
+            <label className="field-label">Email</label>
+            <input
+              className="form-control"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              disabled={loading}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="auth-field">
+            <label className="field-label">Password</label>
+            <input
+              className="form-control"
+              type="password"
+              placeholder="At least 6 characters"
+              value={password}
+              disabled={loading}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
-          <label className="form-label">Email</label>
-          <input
-            className="form-control mb-3"
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            disabled={loading}
-            onChange={(event) => setEmail(event.target.value)}
-          />
+          <div style={{ marginBottom: "24px" }}>
+            <label className="field-label" style={{ marginBottom: "12px" }}>I am a</label>
+            <div className="role-grid">
+              <button
+                type="button"
+                className={`role-card ${role === "user" ? "selected" : ""}`}
+                disabled={loading}
+                onClick={() => setRole("user")}
+              >
+                <span className="role-card-icon">&#9917;</span>
+                <span className="role-card-label">Player</span>
+              </button>
+              <button
+                type="button"
+                className={`role-card ${role === "owner" ? "selected" : ""}`}
+                disabled={loading}
+                onClick={() => setRole("owner")}
+              >
+                <span className="role-card-icon">&#127960;</span>
+                <span className="role-card-label">Stadium Owner</span>
+              </button>
+            </div>
+          </div>
 
-          <label className="form-label">Password</label>
-          <input
-            className="form-control mb-3"
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            disabled={loading}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-
-          <label className="form-label">Role</label>
-          <select
-            className="form-select mb-3"
-            value={role}
-            disabled={loading}
-            onChange={(event) => setRole(event.target.value)}
-          >
-            <option value="user">User</option>
-            <option value="owner">Owner</option>
-          </select>
-
-          <button type="submit" className="btn btn-success" disabled={loading}>
-            {loading ? "Creating account..." : "Register"}
+          <button type="submit" className="btn-green btn-green--full" disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
-
-          <p className="mt-3 mb-0 text-muted">
-            Already have an account? <Link to="/login">Login</Link>
-          </p>
         </form>
+
+        <p className="auth-bottom-link">
+          Already have an account?{" "}
+          <Link to="/login" className="auth-link">Sign in</Link>
+        </p>
       </div>
-    </section>
+    </div>
   );
 }
 
